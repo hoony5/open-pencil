@@ -69,14 +69,19 @@ function buildDerivedTextData(
   const fontMeta: NonNullable<NodeChange['derivedTextData']>['fontMetaData'] = []
   const seen = new Set<string>()
 
-  const addFont = (family: string, weight: number, italic: boolean) => {
-    const style = weightToStyle(weight, italic)
+  const addFont = (family: string, weight: number, italic: boolean, styleOverride?: string) => {
+    const style = styleOverride?.trim() ? styleOverride.trim() : weightToStyle(weight, italic)
+    const figmaStyle = styleOverride?.trim() ? styleOverride.trim() : weightToFigmaStyle(weight, italic)
     const normalized = normalizeFontFamily(family)
     const key = `${normalized}|${style}`
     if (seen.has(key)) return
     seen.add(key)
     fontMeta.push({
-      key: { family: normalized, style: weightToFigmaStyle(weight, italic), postscript: '' },
+      key: {
+        family: normalized,
+        style: figmaStyle,
+        postscript: `${normalized}-${figmaStyle}`.replace(/\s+/g, '')
+      },
       fontLineHeight: 1.2,
       fontDigest: digestMap.get(key),
       fontStyle: italic ? 'ITALIC' : 'NORMAL',
@@ -84,7 +89,7 @@ function buildDerivedTextData(
     })
   }
 
-  addFont(node.fontFamily, node.fontWeight, node.italic)
+  addFont(node.fontFamily, node.fontWeight, node.italic, node.fontName?.style)
   for (const run of node.styleRuns) {
     addFont(
       run.style.fontFamily ?? node.fontFamily,
@@ -205,10 +210,14 @@ function serializeTextProps(
 ): void {
   upsertPluginData(node, TEXT_DIRECTION_PLUGIN_KEY, node.textDirection)
   nc.fontSize = node.fontSize
+  const baseFamily = normalizeFontFamily(node.fontFamily)
+  const baseStyle = node.fontName?.style?.trim()
+    ? node.fontName.style.trim()
+    : weightToFigmaStyle(node.fontWeight, node.italic)
   nc.fontName = {
-    family: normalizeFontFamily(node.fontFamily),
-    style: weightToFigmaStyle(node.fontWeight, node.italic),
-    postscript: ''
+    family: baseFamily,
+    style: baseStyle,
+    postscript: `${baseFamily}-${baseStyle}`.replace(/\s+/g, '')
   }
   nc.textData = exportTextData(node, textLines, fillToKiwiPaint)
   if (node.fontVariations.length > 0) {
