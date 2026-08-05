@@ -351,6 +351,21 @@ export async function normalizeFromHtml(
   }
   for (const page of graph.getPages()) for (const c of [...page.childIds]) fixAbsolute(c)
 
+  // 뷰어 무관 기하 보존: yoga 해결값을 FIXED로 핀(FILL/STRETCH은 뷰어별 해석 드리프트)
+  const pin = (id: string): void => {
+    const n = graph.getNode(id) as any
+    if (!n) return
+    if (n.type === 'FRAME') {
+      if (n.counterAxisSizing === 'FILL') n.counterAxisSizing = 'FIXED'
+      if (n.primaryAxisSizing === 'FILL') n.primaryAxisSizing = 'FIXED'
+    }
+    if (n.type === 'TEXT' && n.layoutAlignSelf === 'STRETCH') {
+      n.layoutAlignSelf = 'INHERIT'
+    }
+    for (const c of [...n.childIds]) pin(c)
+  }
+  for (const page of graph.getPages()) for (const c of [...page.childIds]) pin(c)
+
   return graph
 }
 
