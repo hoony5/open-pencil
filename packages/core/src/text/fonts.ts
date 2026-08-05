@@ -491,7 +491,8 @@ export class FontManager {
     style?: string,
     options: FindLocalFontOptions = {}
   ): Promise<ArrayBuffer | null> {
-    if (!IS_BROWSER || !window.queryLocalFonts) return null
+    if (!IS_BROWSER) return this.findSystemFontFile(family, style, options)
+    if (!window.queryLocalFonts) return null
     if (this.localFontAccessState !== 'granted') return null
     try {
       const fonts = await window.queryLocalFonts()
@@ -505,6 +506,47 @@ export class FontManager {
       console.warn(`Local font access failed for "${family}" ${style ?? ''}:`, e)
       return null
     }
+  }
+
+  // 헤드리스(Node/Bun) 환경: 브라우저 Local Font Access 불가 → 시스템 폰트 디렉터리 스캔
+  private async findSystemFontFile(
+    family: string,
+    style: string | undefined,
+    options: FindLocalFontOptions
+  ): Promise<ArrayBuffer | null> {
+    try {
+      const fs = await import('node:fs')
+      const os = await import('node:os')
+      const path = await import('node:path')
+      const dirs = [
+        path.join(os.homedir(), 'Library/Fonts'),
+        path.join(os.homedir(), '.fonts'),
+        '/Library/Fonts',
+        '/System/Library/Fonts',
+        '/System/Library/Fonts/Supplemental',
+        '/usr/share/fonts'
+      ]
+      const fam = family.toLowerCase().replace(/\s+/g, '')
+      const sty = (style ?? 'Regular').toLowerCase().replace(/\s+/g, '')
+      for (const dir of dirs) {
+        if (!fs.existsSync(dir)) continue
+        for (const file of fs.readdirSync(dir)) {
+          if (!/\.(otf|ttf)$/i.test(file)) continue
+          const base = file.replace(/\.(otf|ttf)$/i, '').toLowerCase().replace(/\s+/g, '')
+          if (!base.includes(fam)) continue
+          const rest = base.replace(fam, '').replace(/^[-_]/, '')
+          const styHit = sty === 'regular' ? rest === '' || rest === 'regular' : rest.includes(sty)
+          if (!styHit) continue
+          const buf = fs.readFileSync(path.join(dir, file))
+          const buffer = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
+          if (!options.allowVariable && isVariableFont(buffer)) continue
+          return buffer
+        }
+      }
+    } catch (e) {
+      console.warn(`System font scan failed for "${family}":`, e)
+    }
+    return null
   }
 
   private registerSupplemental(family: string, style: string, buffer: ArrayBuffer): void {
