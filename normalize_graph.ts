@@ -208,6 +208,7 @@ export async function normalizeFromHtml(
     }
     if (n.type === 'TEXT') {
       const w = Number(n.fontWeight ?? 400)
+      n.fontFamily = 'Pretendard'
       n.fontName = {
         family: 'Pretendard',
         style: w >= 700 ? 'Bold' : w >= 600 ? 'SemiBold' : 'Regular'
