@@ -359,8 +359,9 @@ export async function normalizeFromHtml(
       if (n.counterAxisSizing === 'FILL') n.counterAxisSizing = 'FIXED'
       if (n.primaryAxisSizing === 'FILL') n.primaryAxisSizing = 'FIXED'
     }
+    // INHERIT은 LayoutAlignSelf 멤버가 아님(fig 인코더 거부) → AUTO로 위임
     if (n.type === 'TEXT' && n.layoutAlignSelf === 'STRETCH') {
-      n.layoutAlignSelf = 'INHERIT'
+      n.layoutAlignSelf = 'AUTO'
     }
     for (const c of [...n.childIds]) pin(c)
   }
