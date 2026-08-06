@@ -50,6 +50,15 @@ const isCard = (n: any) => /_card$|^card/.test(n.name)
 const isListItem = (n: any) => /^list_item/.test(n.name)
 const isInput = (n: any) => /^(input|textarea)_box/.test(n.name)
 
+// lowerCamel 식별자 정규화 — 멱등: toLowerCamel('button_Primary_500') === toLowerCamel('buttonPrimary500') === 'buttonPrimary500'
+// manifest.ts normName와 동일 규칙 (fig 레이어명 ↔ Dart 위젯명 매핑)
+const toLowerCamel = (s: string): string => {
+  const parts = s.replace(/[^a-zA-Z0-9_]/g, '_').split('_').filter(Boolean)
+  if (!parts.length) return 'widget' // ponytail: degenerate fallback — real layers always named
+  const cam = parts.map((p, i) => (i === 0 ? p : p.charAt(0).toUpperCase() + p.slice(1))).join('')
+  return cam.charAt(0).toLowerCase() + cam.slice(1)
+}
+
 function textOf(n: any): string {
   if (n.type === 'TEXT') return n.text ?? ''
   for (const cid of n.childIds ?? []) {
@@ -61,7 +70,7 @@ function textOf(n: any): string {
 
 function componentSnippet(n: any): string {
   const label = textOf(n)
-  const name = n.name.replace(/[^a-zA-Z0-9_]/g, '_')
+  const name = toLowerCamel(n.name)
   if (components.some((c) => c.name === name)) return name
   let code = ''
   if (isButton(n) || isChip(n)) {
@@ -106,7 +115,7 @@ function compose(n: any, depth: number): string {
     return ks
   }
   if (isCard(n)) {
-    const cname = n.name.replace(/[^a-zA-Z0-9_]/g, '_')
+    const cname = toLowerCamel(n.name)
     if (!components.some((c) => c.name === cname)) {
       components.push({
         name: cname,

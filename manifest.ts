@@ -30,6 +30,14 @@ const ENTRIES: EntryDef[] = [
     md: 'exp6/snippets.md',
     dart: 'exp6/gate/lib/detail_snippet.dart',
     className: 'DetailSnippet'
+  },
+  {
+    id: 'write',
+    html: 'exp5/write.html',
+    fig: 'exp5/write.fig',
+    md: 'exp6/snippets_write.md',
+    dart: 'exp6/gate/lib/write_snippet.dart',
+    className: 'WriteSnippet'
   }
 ]
 
@@ -59,8 +67,13 @@ function parseMd(mdRel: string): { rootName: string; components: string[]; token
   return { rootName, components, tokenCount }
 }
 
-// Dart 식별자 정규화 — html2snippet의 componentSnippet과 동일 규칙 (fig 레이어명 ↔ 스니펫명 매핑)
-const normName = (s: string): string => s.replace(/[^a-zA-Z0-9_]/g, '_')
+// Dart 식별자 정규화 — html2snippet의 toLowerCamel과 동일 규칙 (fig 레이어명 ↔ Dart 위젯명 매핑). 멱등.
+const normName = (s: string): string => {
+  const parts = s.replace(/[^a-zA-Z0-9_]/g, '_').split('_').filter(Boolean)
+  if (!parts.length) return ''
+  const cam = parts.map((p, i) => (i === 0 ? p : p.charAt(0).toUpperCase() + p.slice(1))).join('')
+  return cam.charAt(0).toLowerCase() + cam.slice(1)
+}
 
 function main(): void {
   const entries: any[] = []
