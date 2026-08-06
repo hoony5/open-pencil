@@ -3,7 +3,7 @@ import { buildStyleMap, normalizeFromHtml } from './normalize_graph.ts'
 
 const HTML = Bun.env.HTML ?? '/Users/hoony5/openpencil-roundtrip/exp5/detail.html'
 const CSS = Bun.env.CSS ?? '/Users/hoony5/openpencil-roundtrip/exp5/base.css'
-const OUT = Bun.env.OUT ?? '/Users/hoony5/openpencil-roundtrip/exp6/snippets.md'
+const OUT = Bun.env.OUT ?? '/Users/hoony5/openpencil-roundtrip/open-pencil/scripts/snippet-gate/snippets.md'
 
 const hex = (c: any): string =>
   '#' +

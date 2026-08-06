@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process'
 
 const ROOT = '/Users/hoony5/openpencil-roundtrip'
 const CLONE = `${ROOT}/open-pencil`
-const OUT = `${ROOT}/exp6/manifest.json`
+const OUT = `${CLONE}/scripts/snippet-gate/manifest.json`
 
 interface EntryDef {
   id: string
@@ -19,24 +19,24 @@ const ENTRIES: EntryDef[] = [
     id: 'home',
     html: 'exp1/page.html',
     fig: 'exp1/page.fig',
-    md: 'exp6/snippets_home.md',
-    dart: 'exp6/gate/lib/home_snippet.dart',
+    md: 'open-pencil/scripts/snippet-gate/snippets_home.md',
+    dart: 'open-pencil/scripts/snippet-gate/lib/home_snippet.dart',
     className: 'HomeSnippet'
   },
   {
     id: 'detail',
     html: 'exp5/detail.html',
     fig: 'exp5/detail.fig',
-    md: 'exp6/snippets.md',
-    dart: 'exp6/gate/lib/detail_snippet.dart',
+    md: 'open-pencil/scripts/snippet-gate/snippets.md',
+    dart: 'open-pencil/scripts/snippet-gate/lib/detail_snippet.dart',
     className: 'DetailSnippet'
   },
   {
     id: 'write',
     html: 'exp5/write.html',
     fig: 'exp5/write.fig',
-    md: 'exp6/snippets_write.md',
-    dart: 'exp6/gate/lib/write_snippet.dart',
+    md: 'open-pencil/scripts/snippet-gate/snippets_write.md',
+    dart: 'open-pencil/scripts/snippet-gate/lib/write_snippet.dart',
     className: 'WriteSnippet'
   }
 ]
@@ -48,7 +48,7 @@ interface FigNode {
 }
 
 function figNodes(figRel: string): FigNode[] {
-  const js = readFileSync(`${ROOT}/exp6/dump_ids.js`, 'utf8')
+  const js = readFileSync(`${CLONE}/scripts/snippet-gate/dump_ids.js`, 'utf8')
   const r = spawnSync('bun', ['packages/cli/src/index.ts', 'eval', `${ROOT}/${figRel}`, '-c', js], {
     cwd: CLONE,
     encoding: 'utf8'

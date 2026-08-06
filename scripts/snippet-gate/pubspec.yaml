@@ -1,0 +1,11 @@
+name: snippet_gate
+description: Compile gate for html2snippet output (PoC only, not shipped).
+publish_to: none
+version: 0.0.1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
