@@ -78,9 +78,7 @@ scratch/
 # OpenCode
 .opencode/
 
-# Snippet gate generated outputs (tooling under scripts/snippet-gate/ is versioned)
+# Gate generated outputs (tooling under scripts/snippet-gate/ is versioned)
 /scripts/snippet-gate/lib/
 /scripts/snippet-gate/.dart_tool/
-/scripts/snippet-gate/snippets*.md
-/scripts/snippet-gate/manifest.json
 /scripts/snippet-gate/pubspec.lock
