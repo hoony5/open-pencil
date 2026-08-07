@@ -165,7 +165,16 @@ export async function normalizeFromHtml(
         num(cssm['padding-left'])
       ]
       const hasPad = pad.some((p) => p)
-      if (n.layoutMode === 'NONE' && hasPad) n.layoutMode = 'VERTICAL'
+      // 표준 CSS → layoutMode 직역 (fixture 클래스명 패턴에만 의존하지 않도록 일반화)
+      if (n.layoutMode === 'NONE') {
+        const disp = cssm['display']
+        if (disp === 'flex' || disp === 'inline-flex') {
+          n.layoutMode = cssm['flex-direction']?.startsWith('row') ? 'HORIZONTAL' : 'VERTICAL'
+        } else if (disp !== 'none') {
+          // block / inline-block / grid / list-item / 클래스 없는 태그 → 세로 블록 플로우
+          n.layoutMode = 'VERTICAL'
+        }
+      }
       if (n.layoutMode !== 'NONE') {
         if (hasPad) {
           n.paddingTop = pad[0] || 0
@@ -207,11 +216,15 @@ export async function normalizeFromHtml(
       n.layoutAlignSelf = 'STRETCH'
     }
     if (n.type === 'TEXT') {
-      const w = Number(n.fontWeight ?? 400)
-      n.fontFamily = 'Pretendard'
-      n.fontName = {
-        family: 'Pretendard',
-        style: w >= 700 ? 'Bold' : w >= 600 ? 'SemiBold' : 'Regular'
+      // Pretendard는 CJK 텍스트에만 적용 — Latin에 강제하면 글리프가 깨져 실사이트가 망가짐
+      const isCJK = /[가-힣぀-ヿ一-鿿]/.test(n.text ?? '')
+      if (isCJK || !n.fontFamily) {
+        const w = Number(n.fontWeight ?? 400)
+        n.fontFamily = 'Pretendard'
+        n.fontName = {
+          family: 'Pretendard',
+          style: w >= 700 ? 'Bold' : w >= 600 ? 'SemiBold' : 'Regular'
+        }
       }
     }
     const ownMode = n.type === 'FRAME' ? n.layoutMode : 'NONE'
