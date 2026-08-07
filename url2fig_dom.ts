@@ -132,6 +132,7 @@ function makeText(parentId: string, n: any, x: number, y: number): void {
     fontFamily: family,
     fontName: { family, style: weightToStyle(fw) },
     fills: [{ type: 'SOLID', color: col }],
+    textAutoResize: 'HEIGHT',
     width: Math.round(n.rect.w),
     height: Math.round(n.rect.h),
     x,
@@ -140,12 +141,15 @@ function makeText(parentId: string, n: any, x: number, y: number): void {
 }
 
 function build(parentId: string, n: any, parentRect: { x: number; y: number }, isRoot: boolean): void {
-  if (n.kids.length === 0 && n.text) {
+  const bg = parseColor(n.cs.bg)
+  const svgFill = parseColor(n.cs.fill)
+  const radius = parseNum(n.cs.radius) ?? 0
+  const hasVisual = !!bg?.a || !!svgFill || radius > 0
+  // 순수 텍스트 leaf(배경/라운드 없음) → TEXT 노드. 버튼 등 배경 있는 leaf → FRAME + TEXT (배경 보존)
+  if (n.kids.length === 0 && n.text && !hasVisual) {
     makeText(parentId, n, isRoot ? 0 : Math.round(n.rect.x - parentRect.x), isRoot ? 0 : Math.round(n.rect.y - parentRect.y))
     return
   }
-  const bg = parseColor(n.cs.bg)
-  const svgFill = parseColor(n.cs.fill)
   const imgHash = n.img ? imgCache.get(n.img) ?? '' : ''
   const props: any = {
     name: String(n.cls || n.tag || 'node').slice(0, 60),
