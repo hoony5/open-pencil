@@ -84,6 +84,3 @@ scratch/
 /scripts/snippet-gate/snippets*.md
 /scripts/snippet-gate/manifest.json
 /scripts/snippet-gate/pubspec.lock
-
-# Scrape CLI output (served to editor via ?file=)
-/public/scrape/
