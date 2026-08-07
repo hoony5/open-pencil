@@ -40,6 +40,23 @@ const parseColor = (s: string | null): { r: number; g: number; b: number; a: num
   }
   return null
 }
+// box-shadow → DROP_SHADOW effect. computed 형식: <color> <ox> <oy> <blur> [<spread>] (px/rem).
+const parseBoxShadow = (s: string | null): any | null => {
+  if (!s || s === 'none') return null
+  const m = s.match(/^(rgba?\([^)]+\)|#[0-9a-f]+|[\w-]+)\s+([-\d.]+)(px|rem)\s+([-\d.]+)(px|rem)\s+([-\d.]+)(px|rem)(?:\s+([-\d.]+)(px|rem))?/)
+  if (!m) return null
+  const toPx = (v: number, u: string) => (u === 'rem' ? v * 16 : v)
+  const col = parseColor(m[1]) ?? { r: 0, g: 0, b: 0, a: 0.2 }
+  return {
+    type: 'DROP_SHADOW',
+    color: col,
+    offset: { x: toPx(parseFloat(m[2]), m[3]), y: toPx(parseFloat(m[4]), m[5]) },
+    radius: toPx(parseFloat(m[6]), m[7]),
+    spread: m[8] ? toPx(parseFloat(m[8]), m[9]) : 0,
+    visible: true,
+    blendMode: 'NORMAL'
+  }
+}
 // Pretendard 전 가중치 매핑 (로컬 ~/Library/Fonts 에 Thin~Black 9종)
 const weightToStyle = (w: number): string =>
   w >= 900 ? 'Black' : w >= 800 ? 'ExtraBold' : w >= 700 ? 'Bold' : w >= 600 ? 'SemiBold' : w >= 500 ? 'Medium' : w >= 300 ? 'Light' : w >= 200 ? 'ExtraLight' : 'Thin'
@@ -73,7 +90,8 @@ for (const vp of VIEWPORTS) {
         cs: {
           bg: cs.backgroundColor, color: cs.color, fontSize: cs.fontSize, fontWeight: cs.fontWeight,
           fontFamily: cs.fontFamily, radius: cs.borderTopLeftRadius, position: cs.position,
-          padL: cs.paddingLeft, padT: cs.paddingTop, fill: el.getAttribute('fill')
+          padL: cs.paddingLeft, padT: cs.paddingTop, fill: el.getAttribute('fill'),
+          shadow: cs.boxShadow
         },
         img: el.tagName === 'IMG' ? (el as HTMLImageElement).currentSrc || (el as HTMLImageElement).src : '',
         text: Array.from(el.childNodes)
@@ -151,6 +169,7 @@ function build(parentId: string, n: any, parentRect: { x: number; y: number }, i
     return
   }
   const imgHash = n.img ? imgCache.get(n.img) ?? '' : ''
+  const shadow = parseBoxShadow(n.cs.shadow)
   const props: any = {
     name: String(n.cls || n.tag || 'node').slice(0, 60),
     layoutMode: 'NONE',
@@ -165,7 +184,8 @@ function build(parentId: string, n: any, parentRect: { x: number; y: number }, i
         ? [{ type: 'SOLID', color: bg }]
         : svgFill
           ? [{ type: 'SOLID', color: svgFill }]
-          : []
+          : [],
+    ...(shadow ? { effects: [shadow] } : {})
   }
   const frame = g.createNode('FRAME', parentId, props)
   if (n.text) makeText(frame.id, n, parseNum(n.cs.padL) ?? 0, parseNum(n.cs.padT) ?? 0)
